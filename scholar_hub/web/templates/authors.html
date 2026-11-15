@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}作者归并{% endblock %}
+{% block body %}
+<h2>作者归并</h2>
+<div class="toolbar">
+  <form method="get" class="toolbar" style="margin:0">
+    <input name="q" value="{{ q }}" placeholder="按名字搜索，如 张伟 / Wei Zhang">
+    <button type="submit">搜索</button>
+  </form>
+  <form method="post" action="{{ url_for('authors_rerun') }}">
+    <button class="secondary" type="submit">重跑自动归并（保留手工锁）</button>
+  </form>
+  <a class="btn" style="background:#0f7b3f" href="{{ url_for('evaluation_view') }}">查看精确率/召回率</a>
+</div>
+
+<table>
+  <tr><th>学者 ID</th><th>显示名</th><th>邮箱</th><th>机构</th>
+      <th>提及数</th><th>来源</th><th>操作</th></tr>
+  {% for p in persons %}
+  <tr>
+    <td>#{{ p.id }}</td>
+    <td><a href="{{ url_for('author_detail', person_id=p.id) }}">{{ p.display_name }}</a></td>
+    <td class="muted">{{ p.canonical_email or '' }}</td>
+    <td class="muted">{{ p.preferred_affiliation or '' }}</td>
+    <td><span class="tag">{{ p.mention_count }}</span></td>
+    <td>{% if p.kind == 'manual' %}<span class="tag green">手工</span>
+        {% else %}<span class="tag gray">自动</span>{% endif %}</td>
+    <td>
+      <a href="{{ url_for('author_detail', person_id=p.id) }}">归并/拆分</a> ·
+      <a href="{{ url_for('scholar_page', person_id=p.id) }}">学者主页</a>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="7" class="muted">还没有学者档案，请先收割并运行归并。</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}学者成果库{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #f5f7fa; --card: #ffffff; --ink: #1f2933; --muted: #66788a;
+      --line: #d9e2ec; --brand: #1d5fd1; --brand-soft: #e8f0fe;
+      --ok: #0f7b3f; --warn: #b45309; --err: #b91c1c;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink);
+           font: 14px/1.6 "Segoe UI", "Microsoft YaHei", sans-serif; }
+    header { background: #0b2a5b; color: #fff; padding: 0 24px;
+             display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    header h1 { font-size: 18px; margin: 12px 0; }
+    nav a { color: #cfe0ff; text-decoration: none; padding: 14px 6px;
+            display: inline-block; border-bottom: 3px solid transparent; }
+    nav a:hover, nav a.active { color: #fff; border-bottom-color: #7db4ff; }
+    main { max-width: 1180px; margin: 22px auto; padding: 0 20px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+             gap: 14px; }
+    .card { background: var(--card); border: 1px solid var(--line);
+            border-radius: 10px; padding: 16px 18px; }
+    .card .num { font-size: 28px; font-weight: 700; color: var(--brand); }
+    .card .label { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; background: var(--card);
+            border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    th, td { padding: 9px 12px; border-bottom: 1px solid var(--line);
+             text-align: left; vertical-align: top; }
+    th { background: #eef3fb; font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    a { color: var(--brand); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: end;
+               margin: 14px 0; }
+    .toolbar label { font-size: 12px; color: var(--muted); display: block; }
+    input, select, textarea { padding: 7px 9px; border: 1px solid var(--line);
+            border-radius: 7px; font: inherit; min-width: 140px; }
+    button, .btn { background: var(--brand); color: #fff; border: none;
+            padding: 8px 14px; border-radius: 7px; cursor: pointer; font: inherit; }
+    button.secondary { background: #52606d; }
+    button.danger { background: var(--err); }
+    .flash { padding: 10px 14px; border-radius: 8px; margin: 12px 0; }
+    .flash.ok { background: #e6f6ec; color: var(--ok); border: 1px solid #b7e0c6; }
+    .flash.err { background: #fdeaea; color: var(--err); border: 1px solid #f3c2c2; }
+    .tag { display: inline-block; background: var(--brand-soft); color: var(--brand);
+           border-radius: 20px; padding: 1px 10px; font-size: 12px; margin: 2px; }
+    .tag.gray { background: #eef1f4; color: #52606d; }
+    .tag.green { background: #e6f6ec; color: var(--ok); }
+    .tag.red { background: #fdeaea; color: var(--err); }
+    .muted { color: var(--muted); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .pill { font-size: 12px; padding: 2px 8px; border-radius: 20px; }
+    .pill.running { background: #fff4e0; color: var(--warn); }
+    .pill.completed { background: #e6f6ec; color: var(--ok); }
+    .pill.failed { background: #fdeaea; color: var(--err); }
+    .metric-big { font-size: 22px; font-weight: 700; }
+    .pass { color: var(--ok); } .fail { color: var(--err); }
+    code { background: #eef1f4; padding: 1px 5px; border-radius: 4px; }
+    @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>📚 学者成果库</h1>
+  <nav>
+    <a href="{{ url_for('index') }}">总览</a>
+    <a href="{{ url_for('repositories') }}">仓储登记</a>
+    <a href="{{ url_for('harvest_view') }}">收割进度</a>
+    <a href="{{ url_for('records_view') }}">记录浏览</a>
+    <a href="{{ url_for('authors_view') }}">作者归并</a>
+    <a href="{{ url_for('evaluation_view') }}">归并评估</a>
+  </nav>
+</header>
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, msg in messages %}
+      <div class="flash {{ category }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block body %}{% endblock %}
+</main>
+</body>
+</html>

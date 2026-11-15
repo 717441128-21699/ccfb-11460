@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}收割进度{% endblock %}
+{% block body %}
+<h2>收割进度</h2>
+
+<div class="card">
+  <form method="post" action="{{ url_for('harvest_run_all') }}" class="toolbar">
+    <div><label>起始日期（含，OAI from）</label>
+      <input name="from_date" placeholder="2026-11-01T00:00:00Z"></div>
+    <div><button type="submit">收割全部启用仓储</button></div>
+    <span class="muted">令牌过期时自动从最近成功页回退续传；每页成功后立即写断点。</span>
+  </form>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h3 style="margin-top:0">单仓储收割</h3>
+  <table>
+    <tr><th>仓储</th><th>格式</th><th>当前断点</th><th style="width:320px">按区间收割</th></tr>
+    {% for r in repos %}
+    <tr>
+      <td><code>{{ r.code }}</code><br><span class="muted">{{ r.name }}</span></td>
+      <td><span class="tag">{{ r.metadata_format }}</span></td>
+      <td>
+        {% set cp = cp_by_repo.get(r.id) %}
+        {% if cp %}
+          <span class="tag red">未完成</span><br>
+          游标 {{ cp.cursor }} / {{ cp.total_count or '?' }}<br>
+          <span class="muted">token: {{ cp.resumption_token or '（已失效，按 datestamp 回退）' }}</span><br>
+          <span class="muted">最后 datestamp: {{ cp.last_datestamp }}</span>
+        {% else %}<span class="tag green">无断点（已完成）</span>{% endif %}
+      </td>
+      <td>
+        <form method="post" action="{{ url_for('harvest_run') }}" class="toolbar">
+          <input type="hidden" name="repository_id" value="{{ r.id }}">
+          <input name="from_date" placeholder="from（可空）">
+          <input name="until_date" placeholder="until（可空）">
+          <button>收割</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h3 style="margin-top:0">最近收割运行</h3>
+  <table>
+    <tr><th>#</th><th>仓储</th><th>状态</th><th>区间</th><th>页</th>
+        <th>seen</th><th>新增/更新</th><th>删除</th><th>令牌过期</th><th>错误</th></tr>
+    {% for r in runs %}
+    <tr>
+      <td>{{ r.id }}{% if r.resumed_from %}<br><span class="muted">续自 #{{ r.resumed_from }}</span>{% endif %}</td>
+      <td><code>{{ r.code }}</code></td>
+      <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+      <td class="muted">{{ r.from_date or '最早' }} → {{ r.until_date or '最新' }}</td>
+      <td>{{ r.pages }}</td>
+      <td>{{ r.records_seen }}</td>
+      <td>{{ r.records_upserted }}</td>
+      <td>{{ r.records_deleted }}</td>
+      <td>{{ r.token_expired_events }}</td>
+      <td class="muted">{{ r.error or '' }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="10" class="muted">还没有收割记录。</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}归并评估{% endblock %}
+{% block body %}
+<h2>作者归并质量评估（对保留真值）</h2>
+{% if not metrics %}
+<div class="flash err">未找到真值文件 data/generated/truth_mentions.json，请先运行
+  <code>py run_demo.py</code> 生成数据并收割。</div>
+{% else %}
+<div class="cards">
+  <div class="card"><div class="label">可评估提及</div>
+    <div class="num">{{ metrics.mentions_evaluated }}</div></div>
+  <div class="card"><div class="label">真值/预测学者</div>
+    <div class="num">{{ metrics.truth_persons }} / {{ metrics.pred_persons }}</div></div>
+  <div class="card"><div class="label">提及级准确率</div>
+    <div class="num">{{ '%.2f'|format(metrics.mention_accuracy * 100) }}%</div></div>
+  <div class="card"><div class="label">重名组成对准确率</div>
+    <div class="num">{{ '%.2f'|format(metrics.homonym_pair_accuracy * 100) }}%</div></div>
+</div>
+
+<div class="grid2" style="margin-top:16px">
+  <div class="card">
+    <h3 style="margin-top:0">成对（pairwise）指标 —— 验收口径</h3>
+    <table>
+      <tr><th>精确率 Precision</th>
+        <td><span class="metric-big {{ 'pass' if metrics.target_pair_p_ge_09 else 'fail' }}">
+          {{ '%.4f'|format(metrics.pair.precision) }}</span>
+          <span class="tag {{ 'green' if metrics.target_pair_p_ge_09 else 'red' }}">
+          {{ '达标 ≥0.90' if metrics.target_pair_p_ge_09 else '未达标' }}</span></td></tr>
+      <tr><th>召回率 Recall</th>
+        <td><span class="metric-big {{ 'pass' if metrics.target_pair_r_ge_09 else 'fail' }}">
+          {{ '%.4f'|format(metrics.pair.recall) }}</span>
+          <span class="tag {{ 'green' if metrics.target_pair_r_ge_09 else 'red' }}">
+          {{ '达标 ≥0.90' if metrics.target_pair_r_ge_09 else '未达标' }}</span></td></tr>
+      <tr><th>F1</th><td class="metric-big">{{ '%.4f'|format(metrics.pair.f1) }}</td></tr>
+      <tr><td colspan="2" class="muted">
+        TP={{ metrics.pair.tp_pairs }}，真值对={{ metrics.pair.truth_pairs }}，
+        预测对={{ metrics.pair.pred_pairs }}</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">B³ 指标（逐提及平均，辅助口径）</h3>
+    <table>
+      <tr><th>Precision</th><td class="metric-big">{{ '%.4f'|format(metrics.b3.precision) }}</td></tr>
+      <tr><th>Recall</th><td class="metric-big">{{ '%.4f'|format(metrics.b3.recall) }}</td></tr>
+      <tr><th>F1</th><td class="metric-big">{{ '%.4f'|format(metrics.b3.f1) }}</td></tr>
+    </table>
+    <p class="muted">真值缺失提及 {{ metrics.truth_mentions_missing }} 条；
+       预测侧多余提及 {{ metrics.pred_mentions_extra }} 条。</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

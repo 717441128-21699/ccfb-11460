@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}记录详情{% endblock %}
+{% block body %}
+<p><a href="{{ url_for('records_view') }}">← 返回记录浏览</a></p>
+<h2>{{ rec.title }}</h2>
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">统一字段</h3>
+    <table>
+      <tr><th>记录 ID</th><td>{{ rec.id }}（version {{ rec.version }}）</td></tr>
+      <tr><th>仓储</th><td><code>{{ rec.repo_code }}</code></td></tr>
+      <tr><th>OAI 标识</th><td class="muted">{{ rec.oai_identifier }}</td></tr>
+      <tr><th>来源格式</th><td><span class="tag">{{ rec.metadata_format if rec.metadata_format else '—' }}</span>
+        原始解析为 {{ 'MARCXML' if rec.doi and false else '统一模型' }}</td></tr>
+      <tr><th>日期 / 类型</th><td>{{ rec.date }} · {{ rec.type }}</td></tr>
+      <tr><th>出版方 / 语言</th><td>{{ rec.publisher }} · {{ rec.language }}</td></tr>
+      <tr><th>DOI</th><td>{{ rec.doi or '—' }}</td></tr>
+      <tr><th>datestamp</th><td class="muted">{{ rec.datestamp }}</td></tr>
+      <tr><th>主题词</th><td>{% for s in subjects %}<span class="tag">{{ s.subject }}</span>{% endfor %}</td></tr>
+      <tr><th>摘要</th><td class="muted">{{ rec.abstract }}</td></tr>
+    </table>
+    <h3>DOI 与版本关系</h3>
+    <table>
+      {% for d in dois %}<tr><td><span class="tag gray">{{ d.kind }}</span></td><td>{{ d.doi }}</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">作者提及（{{ creators|length }}）</h3>
+    <table>
+      <tr><th>#</th><th>原始名字</th><th>邮箱</th><th>机构</th><th>归属学者</th></tr>
+      {% for c in creators %}
+      <tr>
+        <td>{{ c.position + 1 }}</td><td>{{ c.raw_name }}</td>
+        <td class="muted">{{ c.email or '' }}</td>
+        <td class="muted">{{ c.affiliation or '' }}</td>
+        <td>{% if c.person_id %}
+          <a href="{{ url_for('author_detail', person_id=c.person_id) }}">#{{ c.person_id }}</a>
+          {% else %}<span class="tag gray">未归并</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <h3>作品挂接（work #{{ work.id if work else '—' }}）</h3>
+    {% if work %}
+      <p>规范 DOI：<code>{{ work.canonical_doi or '无 DOI' }}</code>
+         <a class="btn" style="padding:3px 10px;font-size:12px"
+            href="{{ url_for('work_bibtex', work_id=work.id) }}">导出 BibTeX</a></p>
+      <table>
+        <tr><th>同 work 下其他版本</th><th>类型</th><th>DOI</th><th>日期</th></tr>
+        {% for s in siblings %}
+        <tr><td><a href="{{ url_for('record_detail', record_id=s.id) }}">{{ s.title }}</a></td>
+            <td><span class="tag">{{ s.type }}</span></td>
+            <td class="muted">{{ s.doi or '' }}</td><td>{{ s.date or '' }}</td></tr>
+        {% else %}<tr><td colspan="4" class="muted">无其他版本</td></tr>{% endfor %}
+      </table>
+    {% endif %}
+
+    <h3>审计事件</h3>
+    <table>
+      {% for e in events %}
+      <tr><td><span class="tag gray">{{ e.event }}</span></td>
+          <td class="muted">{{ e.at }}</td><td class="muted">{{ e.detail or '' }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}

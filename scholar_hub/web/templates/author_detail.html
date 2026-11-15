@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}学者 #{{ person.id }} 归并详情{% endblock %}
+{% block body %}
+<p><a href="{{ url_for('authors_view') }}">← 返回作者归并</a>
+   · <a href="{{ url_for('scholar_page', person_id=person.id) }}">学者主页 →</a></p>
+
+<h2>学者 #{{ person.id }}：{{ person.display_name }}
+  {% if person.kind == 'manual' %}<span class="tag green">手工档案</span>{% endif %}
+</h2>
+<p class="muted">邮箱 {{ person.canonical_email or '—' }} ·
+   机构 {{ person.preferred_affiliation or '—' }} ·
+   手工锁 {{ locks|length }} 条 · 成对约束 {{ constraints|length }} 条</p>
+
+<div class="card">
+  <h3 style="margin-top:0">手工合并到其他学者</h3>
+  <form method="post" action="{{ url_for('authors_merge') }}" class="toolbar">
+    <input type="hidden" name="drop_id" value="{{ person.id }}">
+    <div><label>保留的目标学者</label>
+      <select name="keep_id" style="min-width:260px">
+        {% for c in candidates %}<option value="{{ c.id }}">#{{ c.id }} {{ c.display_name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div><label>备注</label><input name="note" placeholder="手工合并原因"></div>
+    <button class="danger" type="submit">合并（本学者将被删除）</button>
+  </form>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h3 style="margin-top:0">手工拆分：勾选提及另立学者</h3>
+  <form method="post" action="{{ url_for('authors_split', person_id=person.id) }}">
+    <table>
+      <tr><th>选择</th><th>提及</th><th>所属记录</th><th>邮箱</th><th>机构</th><th>仓储</th><th>锁</th></tr>
+      {% for m in mentions %}
+      <tr>
+        <td><input type="checkbox" name="mention_keys" value="{{ m.mention_key }}"
+                   style="min-width:auto"></td>
+        <td>{{ m.raw_name }}<br><span class="muted">{{ m.mention_key }}</span></td>
+        <td><a href="{{ url_for('record_detail', record_id=m.record_id) }}">{{ m.record_title }}</a></td>
+        <td class="muted">{{ m.email or '' }}</td>
+        <td class="muted">{{ m.affiliation or '' }}</td>
+        <td><code>{{ m.repo_code }}</code></td>
+        <td>{% if m.mention_key in locks|map(attribute='mention_key') %}
+          <span class="tag green">已锁</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="toolbar">
+      <input name="note" placeholder="拆分备注（可选）">
+      <button class="danger" type="submit">拆分为新学者</button>
+    </div>
+  </form>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h3 style="margin-top:0">单条提及改派</h3>
+  {% for m in mentions %}
+  <form method="post" action="{{ url_for('authors_assign', person_id=person.id) }}"
+        class="toolbar" style="margin:6px 0">
+    <input type="hidden" name="mention_key" value="{{ m.mention_key }}">
+    <span style="min-width:220px">{{ m.raw_name }}
+      <span class="muted">（{{ m.record_title[:28] }}…）</span></span>
+    <select name="target_person_id" style="min-width:220px">
+      {% for c in candidates %}<option value="{{ c.id }}">#{{ c.id }} {{ c.display_name }}</option>{% endfor %}
+    </select>
+    <button class="secondary" type="submit">改派并加锁</button>
+  </form>
+  {% endfor %}
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h3 style="margin-top:0">现有手工约束</h3>
+  <table>
+    <tr><th>类型</th><th>涉及学者</th><th>备注</th><th>时间</th></tr>
+    {% for c in constraints %}
+    <tr><td><span class="tag {{ 'green' if c.kind == 'must_link' else 'red' }}">{{ c.kind }}</span></td>
+        <td>#{{ c.person_a }} ↔ #{{ c.person_b }}</td>
+        <td class="muted">{{ c.note or '' }}</td><td class="muted">{{ c.created_at }}</td></tr>
+    {% else %}<tr><td colspan="4" class="muted">暂无约束。</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

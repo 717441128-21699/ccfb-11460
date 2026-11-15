@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}学者主页 · {{ person.display_name }}{% endblock %}
+{% block body %}
+<p><a href="{{ url_for('authors_view') }}">← 作者归并</a></p>
+<div class="card">
+  <h2 style="margin:6px 0">{{ person.display_name }}
+    <span class="tag {{ 'green' if person.kind == 'manual' else 'gray' }}">
+      {{ '手工档案' if person.kind == 'manual' else '自动归并' }}</span>
+  </h2>
+  <p class="muted">
+    邮箱：{{ person.canonical_email or '—' }}<br>
+    机构：{{ person.preferred_affiliation or '—' }}
+  </p>
+  <p>
+    <a class="btn" href="{{ url_for('scholar_bibtex', person_id=person.id) }}">
+      导出全部成果 BibTeX</a>
+    <a class="btn" style="background:#52606d"
+       href="{{ url_for('author_detail', person_id=person.id) }}">归并/拆分管理</a>
+  </p>
+  <div>
+    <b>研究方向：</b>
+    {% for s in subjects %}<span class="tag">{{ s.subject }}（{{ s.c }}）</span>{% endfor %}
+  </div>
+  <div style="margin-top:8px">
+    <b>常见合作者：</b>
+    {% for c in coauthors %}
+      <a href="{{ url_for('scholar_page', person_id=c.id) }}">
+        <span class="tag gray">{{ c.display_name }}（{{ c.c }}）</span></a>
+    {% endfor %}
+  </div>
+</div>
+
+<h3>按年份的成果（work 级，预印本与正式版已合并）</h3>
+{% for year, works in by_year.items() %}
+<div class="card" style="margin-bottom:12px">
+  <h4 style="margin:4px 0 10px">{{ year }} 年 · {{ works|length }} 项</h4>
+  <table>
+    <tr><th>作品</th><th>规范 DOI</th><th>类型</th><th>BibTeX</th></tr>
+    {% for w in works %}
+    <tr>
+      <td>{{ w.title }}</td>
+      <td class="muted">{{ w.canonical_doi or '—' }}</td>
+      <td><span class="tag">{{ w.type_mix }}</span></td>
+      <td><a href="{{ url_for('work_bibtex', work_id=w.id) }}">.bib</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+<p class="muted">暂无论文成果。</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}仓储登记{% endblock %}
+{% block body %}
+<h2>仓储登记</h2>
+
+<div class="card">
+  <h3 style="margin-top:0">模拟仓储（data/generated/servers.json）</h3>
+  <table>
+    <tr><th>代码</th><th>名称</th><th>端点</th><th>格式</th><th>分页</th><th>魔改 quirk</th><th>状态</th><th></th></tr>
+    {% for s in servers %}
+    <tr>
+      <td><code>{{ s.code }}</code></td>
+      <td>{{ s.name }}</td>
+      <td class="muted">{{ s.base_url }}<br><span class="tag gray">set: {{ s.set_spec }}</span></td>
+      <td><span class="tag">{{ s.metadata_format }}</span></td>
+      <td>{{ s.page_size }}/页</td>
+      <td>{% for q in s.quirks %}<span class="tag red">{{ q }}</span> {% endfor %}</td>
+      <td>
+        {% if s.code in registered %}<span class="tag green">已登记</span>
+        {% else %}<span class="tag gray">未登记</span>{% endif %}
+      </td>
+      <td>
+        {% if s.code not in registered %}
+        <form method="post" action="{{ url_for('register_from_disk', code=s.code) }}">
+          <button>登记</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h3 style="margin-top:0">已登记仓储</h3>
+  <table>
+    <tr><th>ID</th><th>代码</th><th>名称</th><th>端点</th><th>格式</th><th>启用</th><th></th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.id }}</td><td><code>{{ r.code }}</code></td><td>{{ r.name }}</td>
+      <td class="muted">{{ r.base_url }}</td>
+      <td><span class="tag">{{ r.metadata_format }}</span></td>
+      <td>{% if r.is_active %}<span class="tag green">启用</span>
+          {% else %}<span class="tag gray">停用</span>{% endif %}</td>
+      <td>
+        <form method="post" action="{{ url_for('toggle_repo', repo_id=r.id) }}">
+          <button class="secondary">{{ '停用' if r.is_active else '启用' }}</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="muted">还没有登记任何仓储。</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h3 style="margin-top:0">手工登记仓储</h3>
+  <form method="post" action="{{ url_for('register_repo') }}" class="toolbar">
+    <div><label>代码</label><input name="code" required placeholder="ir-xxx"></div>
+    <div><label>名称</label><input name="name" required></div>
+    <div><label>Base URL</label><input name="base_url" required style="min-width:240px"
+          placeholder="http://127.0.0.1:18010/oai"></div>
+    <div><label>元数据格式</label>
+      <select name="metadata_format"><option>oai_dc</option><option>marcxml</option></select></div>
+    <div><label>集合 setSpec</label><input name="set_spec"></div>
+    <div><label>每页条数</label><input name="page_size" type="number" value="25"></div>
+    <div><label>quirks（JSON 数组）</label>
+      <input name="quirks_json" value="[]" style="min-width:220px"></div>
+    <div><button type="submit">登记</button></div>
+  </form>
+</div>
+{% endblock %}

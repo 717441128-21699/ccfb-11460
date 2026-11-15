@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}记录浏览{% endblock %}
+{% block body %}
+<h2>记录浏览</h2>
+<form class="toolbar card" method="get" style="padding:14px">
+  <div><label>标题关键词</label><input name="q" value="{{ q }}"></div>
+  <div><label>DOI</label><input name="doi" value="{{ doi }}"></div>
+  <div><label>仓储</label>
+    <select name="repo_id">
+      <option value="">全部</option>
+      {% for r in repos %}<option value="{{ r.id }}"
+        {% if repo_id == r.id|string %}selected{% endif %}>{{ r.code }}</option>{% endfor %}
+    </select>
+  </div>
+  <div><button type="submit">查询</button></div>
+</form>
+
+<table style="margin-top:14px">
+  <tr><th>ID</th><th>仓储</th><th>OAI 标识 / 版本</th><th>标题</th>
+      <th>DOI</th><th>日期</th><th>类型</th><th>datestamp</th></tr>
+  {% for r in rows %}
+  <tr>
+    <td>{{ r.id }}</td>
+    <td><code>{{ r.repo_code }}</code></td>
+    <td class="muted">{{ r.oai_identifier }}<br>
+      <span class="tag gray">v{{ r.version }}</span></td>
+    <td><a href="{{ url_for('record_detail', record_id=r.id) }}">{{ r.title }}</a></td>
+    <td class="muted">{{ r.doi or '' }}</td>
+    <td>{{ r.date or '' }}</td>
+    <td><span class="tag">{{ r.type or '' }}</span></td>
+    <td class="muted">{{ r.datestamp }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="8" class="muted">没有匹配记录。</td></tr>
+  {% endfor %}
+</table>
+<p class="muted">最多显示 300 条；同一 OAI 标识的更新始终原地修改（version+1），不会产生新行。</p>
+{% endblock %}

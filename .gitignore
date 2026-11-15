@@ -16,3 +16,11 @@ node_modules/
 __pycache__/
 .venv/
 venv/
+
+# 运行期数据与日志
+data/
+*.db
+*.db-wal
+*.db-shm
+*.log
+.pytest_cache/
